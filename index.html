@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c5aa0, #1e4080);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .current-time {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .timer-section {
+            background: linear-gradient(135deg, #f8f9ff, #e8f0ff);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #e0e8ff;
+        }
+
+        .timer-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .current-task {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e8ff;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2c5aa0;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #333;
+        }
+
+        .btn-pause:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-stopped { background: #dc3545; }
+        .status-running { background: #28a745; animation: pulse 2s infinite; }
+        .status-paused { background: #ffc107; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .entries-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #2c5aa0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .entry-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid #2c5aa0;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .entry-project {
+            font-weight: bold;
+            color: #2c5aa0;
+            font-size: 1.1em;
+        }
+
+        .entry-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .entry-duration {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .entry-task {
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .entry-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 15px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid #2c5aa0;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        @media (max-width: 768px) {
+            .task-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .timer-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏱️ Time Tracker Pro</h1>
+            <div class="current-time" id="currentTime"></div>
+        </div>
+
+        <div class="main-content">
+            <!-- Timer Section -->
+            <div class="timer-section">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="timerStatus">Ready to Start</span>
+                </div>
+                
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                
+                <div class="current-task" id="currentTaskDisplay" style="display: none;">
+                    <strong>Current Task:</strong> <span id="currentTaskText"></span><br>
+                    <strong>Project:</strong> <span id="currentProjectText"></span>
+                </div>
+
+                <div class="task-form">
+                    <div class="form-group">
+                        <label for="client">Client</label>
+                        <select id="client" required>
+                            <option value="">Select Client</option>
+                            <option value="Acme Corp">Acme Corp</option>
+                            <option value="TechStart Inc">TechStart Inc</option>
+                            <option value="Global Solutions">Global Solutions</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project">Project</label>
+                        <input type="text" id="project" placeholder="e.g., Website Redesign" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hourlyRate">Hourly Rate ($)</label>
+                        <input type="number" id="hourlyRate" value="75" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="Development">Development</option>
+                            <option value="Design">Design</option>
+                            <option value="Consulting">Consulting</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Research">Research</option>
+                            <option value="Testing">Testing</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="task">Task Description</label>
+                        <textarea id="task" placeholder="Describe what you're working on..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="btn btn-start" id="startBtn" onclick="startTimer()">
+                        ▶️ Start Timer
+                    </button>
+                    <button class="btn btn-pause" id="pauseBtn" onclick="pauseTimer()" disabled>
+                        ⏸️ Pause
+                    </button>
+                    <button class="btn btn-stop" id="stopBtn" onclick="stopTimer()" disabled>
+                        ⏹️ Stop & Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="summary-value" id="todayHours">0.0</div>
+                    <div class="summary-label">Hours Today</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="todayEarnings">$0</div>
+                    <div class="summary-label">Earnings Today</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="weekHours">0.0</div>
+                    <div class="summary-label">Hours This Week</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="activeProjects">0</div>
+                    <div class="summary-label">Active Projects</div>
+                </div>
+            </div>
+
+            <!-- Recent Entries -->
+            <div class="entries-section">
+                <h2 class="section-title">
+                    📋 Recent Time Entries
+                    <button class="btn btn-small" onclick="refreshEntries()" style="margin-left: auto;">
+                        🔄 Refresh
+                    </button>
+                </h2>
+                <div id="entriesList">
+                    <!-- Entries will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Configuration - Replace with your n8n webhook URLs
+        const CONFIG = {
+            webhooks: {
+                start: 'https://your-n8n-instance.com/webhook/timer-start',
+                stop: 'https://your-n8n-instance.com/webhook/timer-stop',
+                entries: 'https://your-n8n-instance.com/webhook/get-entries',
+                update: 'https://your-n8n-instance.com/webhook/update-entry',
+                delete: 'https://your-n8n-instance.com/webhook/delete-entry'
+            }
+        };
+
+        // Timer state
+        let timerState = {
+            isRunning: false,
+            isPaused: false,
+            startTime: null,
+            pausedTime: 0,
+            currentEntry: null
+        };
+
+        // Load state from localStorage
+        function loadTimerState() {
+            const saved = localStorage.getItem('timerState');
+            if (saved) {
+                timerState = { ...timerState, ...JSON.parse(saved) };
+                if (timerState.isRunning && timerState.startTime) {
+                    timerState.startTime = new Date(timerState.startTime);
+                    updateTimerDisplay();
+                    updateUI();
+                }
+            }
+        }
+
+        // Save state to localStorage
+        function saveTimerState() {
+            localStorage.setItem('timerState', JSON.stringify(timerState));
+        }
+
+        // Update current time display
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString();
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            if (!timerState.isRunning && !timerState.isPaused) {
+                document.getElementById('timerDisplay').textContent = '00:00:00';
+                return;
+            }
+
+            let elapsed = timerState.pausedTime;
+            if (timerState.isRunning && timerState.startTime) {
+                elapsed += Date.now() - timerState.startTime.getTime();
+            }
+
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+
+            document.getElementById('timerDisplay').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Update UI based on timer state
+        function updateUI() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const timerStatus = document.getElementById('timerStatus');
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const currentTaskDisplay = document.getElementById('currentTaskDisplay');
+
+            if (timerState.isRunning) {
+                statusIndicator.className = 'status-indicator status-running';
+                timerStatus.textContent = 'Timer Running';
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                currentTaskDisplay.style.display = 'block';
+            } else if (timerState.isPaused) {
+                statusIndicator.className = 'status-indicator status-paused';
+                timerStatus.textContent = 'Timer Paused';
+                startBtn.disabled = false;
+                startBtn.textContent = '▶️ Resume';
+                pauseBtn.disabled = true;
+                stopBtn.disabled = false;
+                currentTaskDisplay.style.display = 'block';
+            } else {
+                statusIndicator.className = 'status-indicator status-stopped';
+                timerStatus.textContent = 'Ready to Start';
+                startBtn.disabled = false;
+                startBtn.textContent = '▶️ Start Timer';
+                pauseBtn.disabled = true;
+                stopBtn.disabled = true;
+                currentTaskDisplay.style.display = 'none';
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Validate form
+        function validateForm() {
+            const client = document.getElementById('client').value;
+            const project = document.getElementById('project').value;
+            const task = document.getElementById('task').value;
+            const hourlyRate = document.getElementById('hourlyRate').value;
+
+            if (!client || !project || !task || !hourlyRate) {
+                showNotification('Please fill in all required fields', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // Start timer
+        async function startTimer() {
+            if (timerState.isPaused) {
+                // Resume from pause
+                timerState.isRunning = true;
+                timerState.isPaused = false;
+                timerState.startTime = new Date();
+            } else {
+                // Start new timer
+                if (!validateForm()) return;
+
+                const formData = {
+                    client: document.getElementById('client').value,
+                    project: document.getElementById('project').value,
+                    task: document.getElementById('task').value,
+                    hourly_rate: parseFloat(document.getElementById('hourlyRate').value),
+                    category: document.getElementById('category').value,
+                    start_time: new Date().toISOString()
+                };
+
+                try {
+                    const response = await fetch(CONFIG.webhooks.start, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        timerState.isRunning = true;
+                        timerState.isPaused = false;
+                        timerState.startTime = new Date();
+                        timerState.pausedTime = 0;
+                        timerState.currentEntry = formData;
+
+                        document.getElementById('currentTaskText').textContent = formData.task;
+                        document.getElementById('currentProjectText').textContent = formData.project;
+
+                        showNotification('Timer started successfully!');
+                    } else {
+                        throw new Error('Failed to start timer');
+                    }
+                } catch (error) {
+                    showNotification('Failed to start timer: ' + error.message, 'error');
+                    return;
+                }
+            }
+
+            updateUI();
+            saveTimerState();
+        }
+
+        // Pause timer
+        function pauseTimer() {
+            if (timerState.isRunning) {
+                timerState.pausedTime += Date.now() - timerState.startTime.getTime();
+                timerState.isRunning = false;
+                timerState.isPaused = true;
+                updateUI();
+                saveTimerState();
+                showNotification('Timer paused');
+            }
+        }
+
+        // Stop timer
+        async function stopTimer() {
+            if (!timerState.currentEntry) return;
+
+            let totalElapsed = timerState.pausedTime;
+            if (timerState.isRunning && timerState.startTime) {
+                totalElapsed += Date.now() - timerState.startTime.getTime();
+            }
+
+            const durationHours = totalElapsed / (1000 * 60 * 60);
+            const endTime = new Date().toISOString();
+
+            const stopData = {
+                ...timerState.currentEntry,
+                end_time: endTime,
+                duration_hours: parseFloat(durationHours.toFixed(2)),
+                amount: parseFloat((durationHours * timerState.currentEntry.hourly_rate).toFixed(2))
+            };
+
+            try {
+                const response = await fetch(CONFIG.webhooks.stop, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(stopData)
+                });
+
+                if (response.ok) {
+                    // Reset timer state
+                    timerState = {
+                        isRunning: false,
+                        isPaused: false,
+                        startTime: null,
+                        pausedTime: 0,
+                        currentEntry: null
+                    };
+
+                    // Clear form
+                    document.getElementById('task').value = '';
+                    
+                    updateUI();
+                    saveTimerState();
+                    updateTimerDisplay();
+                    refreshEntries();
+                    updateSummary();
+                    
+                    showNotification(`Timer stopped! Duration: ${durationHours.toFixed(2)} hours`);
+                } else {
+                    throw new Error('Failed to stop timer');
+                }
+            } catch (error) {
+                showNotification('Failed to stop timer: ' + error.message, 'error');
+            }
+        }
+
+        // Load recent entries
+        async function refreshEntries() {
+            try {
+                const response = await fetch(CONFIG.webhooks.entries);
+                if (response.ok) {
+                    const entries = await response.json();
+                    displayEntries(entries);
+                    updateSummary();
+                }
+            } catch (error) {
+                console.error('Failed to load entries:', error);
+            }
+        }
+
+        // Display entries
+        function displayEntries(entries) {
+            const entriesList = document.getElementById('entriesList');
+            
+            if (!entries || entries.length === 0) {
+                entriesList.innerHTML = '<p style="text-align: center; color: #666;">No recent entries</p>';
+                return;
+            }
+
+            entriesList.innerHTML = entries.slice(0, 10).map(entry => `
+                <div class="entry-card">
+                    <div class="entry-header">
+                        <div class="entry-project">${entry.project}</div>
+                        <div class="entry-time">${new Date(entry.start_time).toLocaleDateString()}</div>
+                    </div>
+                    <div class="entry-task">${entry.task}</div>
+                    <div class="entry-footer">
+                        <div>
+                            <span class="entry-duration">${entry.duration_hours}h</span> • 
+                            $${entry.hourly_rate}/hr • 
+                            <strong>$${entry.amount}</strong>
+                        </div>
+                        <div class="entry-actions">
+                            <button class="btn btn-small" onclick="editEntry('${entry.id}')">✏️ Edit</button>
+                            <button class="btn btn-small" onclick="deleteEntry('${entry.id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update summary statistics
+        function updateSummary() {
+            // This would typically fetch from your backend
+            // For now, we'll use placeholder values
+            document.getElementById('todayHours').textContent = '6.5';
+            document.getElementById('todayEarnings').textContent = '$487.50';
+            document.getElementById('weekHours').textContent = '32.5';
+            document.getElementById('activeProjects').textContent = '3';
+        }
+
+        // Edit entry (placeholder)
+        function editEntry(id) {
+            showNotification('Edit functionality coming soon!');
+        }
+
+        // Delete entry (placeholder)
+        async function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                try {
+                    const response = await fetch(`${CONFIG.webhooks.delete}/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Entry deleted successfully!');
+                        refreshEntries();
+                    } else {
+                        throw new Error('Failed to delete entry');
+                    }
+                } catch (error) {
+                    showNotification('Failed to delete entry: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Initialize app
+        function init() {
+            loadTimerState();
+            updateCurrentTime();
+            updateTimerDisplay();
+            updateUI();
+            refreshEntries();
+            
+            // Update displays every second
+            setInterval(() => {
+                updateCurrentTime();
+                updateTimerDisplay();
+            }, 1000);
+            
+            // Save state periodically
+            setInterval(saveTimerState, 10000);
+        }
+
+        // Start app when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
